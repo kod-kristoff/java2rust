@@ -39,11 +39,11 @@ impl Parser {
         let mut events = self.events;
         let mut stack = Vec::new();
 
-        dbg!(&events);
+        // dbg!(&events);
         assert!(matches!(events.pop(), Some(Event::Close)));
 
         for event in events {
-            dbg!(&event);
+            // dbg!(&event);
             match event {
                 Event::Open { kind } => stack.push(Tree {
                     kind,
@@ -62,7 +62,7 @@ impl Parser {
                     stack.last_mut().unwrap().children.push(Child::Token(token));
                 }
             }
-            dbg!(&stack);
+            // dbg!(&stack);
         }
 
         stack.pop().unwrap()

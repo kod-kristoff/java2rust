@@ -5,7 +5,7 @@ use crate::TokenKind::*;
 use crate::TreeKind::*;
 
 pub fn file(p: &mut Parser) {
-    println!("rules.start");
+    println!("rules.file");
     let m = p.open();
     dbg!(p.eof());
     while !p.eof() {

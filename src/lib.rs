@@ -10,6 +10,7 @@ use parser::Parser;
 mod token;
 pub use token::{Token, TokenKind};
 
+mod rewrite_rules;
 mod rules;
 
 pub fn parse_tree(text: &str) -> Tree {
@@ -18,6 +19,10 @@ pub fn parse_tree(text: &str) -> Tree {
     let mut p = Parser::new(tokens);
     rules::file(&mut p);
     p.build_tree()
+}
+
+pub fn generate_rust(tree: &Tree, dst: &mut String) {
+    rewrite_rules::file(tree, dst);
 }
 
 #[macro_export]
