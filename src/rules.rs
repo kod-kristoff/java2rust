@@ -1,4 +1,6 @@
+use crate::parser::MarkClosed;
 use crate::parser::Parser;
+use crate::TokenKind;
 use crate::TokenKind::*;
 use crate::TreeKind::*;
 
@@ -136,35 +138,74 @@ fn stmt_return(p: &mut Parser) {
 }
 
 fn expr(p: &mut Parser) {
-    expr_delimited(p)
+    expr_rec(p, Eof);
 }
-fn expr_delimited(p: &mut Parser) {
-    let m = p.open();
-    match p.nth(0) {
-        // ExprLiteral = 'int' | 'true' | 'false'
-        // Int | TrueKeyword | FalseKeyword => {
-        //     p.advance();
-        //     p.close(m, ExprLiteral)
-        // }
-        // // ExprName = 'name'
-        // Name => {
-        //     p.advance();
-        //     p.close(m, ExprName)
-        // }
-        // // ExprParen   = '(' Expr ')'
-        // LParen => {
-        //     p.expect(LParen);
-        //     expr(p);
-        //     p.expect(RParen);
-        //     p.close(m, ExprParen)
-        // }
-        _ => {
-            if !p.eof() {
-                p.advance();
-            }
-            p.close(m, ErrorTree)
+
+fn expr_rec(p: &mut Parser, left: TokenKind) {
+    let Some(mut lhs) = expr_delimited(p) else {
+        return;
+    };
+
+    while p.at(LParen) {
+        // let m = p.open_before(lhs);
+        todo!("expr call")
+    }
+
+    loop {
+        let right = p.nth(0);
+        if right_binds_tighter(left, right) {
+            let m = p.open_before(lhs);
+            p.advance();
+            expr_rec(p, right);
+            lhs = p.close(m, ExprBinary);
+        } else {
+            break;
         }
     }
+}
+
+fn right_binds_tighter(left: TokenKind, right: TokenKind) -> bool {
+    fn tightness(kind: TokenKind) -> Option<usize> {
+        [
+            // Precedence table:
+            [Plus, Minus].as_slice(),
+            &[Star, Slash],
+        ]
+        .iter()
+        .position(|level| level.contains(&kind))
+    }
+    let Some(right_tightness) = tightness(right) else {
+    return false
+  };
+    let Some(left_tightness) = tightness(left) else {
+    assert!(left == Eof);
+    return true;
+  };
+    right_tightness > left_tightness
+}
+
+fn expr_delimited(p: &mut Parser) -> Option<MarkClosed> {
+    let result = match p.nth(0) {
+        TrueKeyword | FalseKeyword /*| Int*/ => {
+            let m = p.open();
+            p.advance();
+            p.close(m, ExprLiteral)
+        }
+        Name => {
+            let m = p.open();
+            p.advance();
+            p.close(m, ExprName)
+        }
+        LParen => {
+            let m = p.open();
+            p.expect(LParen);
+            expr(p);
+            p.expect(RParen);
+            p.close(m, ExprParen)
+        }
+        _ => return None,
+    };
+    Some(result)
 }
 #[cfg(test)]
 mod tests {

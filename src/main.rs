@@ -9,4 +9,5 @@ fn main() {
     }
     "#;
     let tree = parse_tree(source_code);
+    println!("{:?}", tree);
 }

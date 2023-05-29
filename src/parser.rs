@@ -19,6 +19,11 @@ pub enum Event {
 pub struct MarkOpened {
     index: usize,
 }
+
+pub struct MarkClosed {
+    index: usize,
+}
+
 impl Parser {
     pub fn new(tokens: Lexer) -> Self {
         Self {
@@ -73,9 +78,21 @@ impl Parser {
         mark
     }
 
-    pub fn close(&mut self, m: MarkOpened, kind: TreeKind) {
+    pub fn close(&mut self, m: MarkOpened, kind: TreeKind) -> MarkClosed {
         self.events[m.index] = Event::Open { kind };
         self.events.push(Event::Close);
+        MarkClosed { index: m.index }
+    }
+
+    pub fn open_before(&mut self, m: MarkClosed) -> MarkOpened {
+        let mark = MarkOpened { index: m.index };
+        self.events.insert(
+            m.index,
+            Event::Open {
+                kind: TreeKind::ErrorTree,
+            },
+        );
+        mark
     }
 
     pub fn advance(&mut self) {
