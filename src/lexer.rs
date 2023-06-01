@@ -31,7 +31,7 @@ impl<'text> Lexer<'text> {
                 text = rest;
                 continue;
             }
-            dbg!(&text);
+            // dbg!(&text);
             let text_orig = text;
             let mut kind = 'kind: {
                 for (i, symbol) in punctuation.0.split_ascii_whitespace().enumerate() {
@@ -54,7 +54,7 @@ impl<'text> Lexer<'text> {
                 text = &text[error_index..];
                 ErrorToken
             };
-            dbg!(&kind);
+            // dbg!(&kind);
             assert!(text.len() < text_orig.len());
             let token_text = &text_orig[..text_orig.len() - text.len()];
             if kind == Name {
@@ -71,7 +71,7 @@ impl<'text> Lexer<'text> {
             });
         }
 
-        dbg!(&result);
+        // dbg!(&result);
         return result;
     }
 }

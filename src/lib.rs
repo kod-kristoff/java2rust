@@ -10,6 +10,8 @@ use parser::Parser;
 mod token;
 pub use token::{Token, TokenKind};
 
+pub mod translator;
+
 mod rewrite_rules;
 mod rules;
 
@@ -21,8 +23,9 @@ pub fn parse_tree(text: &str) -> Tree {
     p.build_tree()
 }
 
-pub fn generate_rust(tree: &Tree, dst: &mut String) {
-    rewrite_rules::file(tree, dst);
+pub fn generate_rust(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
+    rewrite_rules::file(tree, dst)?;
+    Ok(())
 }
 
 #[macro_export]

@@ -1,7 +1,7 @@
 use crate::{tree::Child, TokenKind, Tree, TreeKind};
 use std::fmt::{self, Write};
 
-pub fn file(tree: &Tree, dst: &mut String) -> fmt::Result {
+pub fn file(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::File);
     for child in &tree.children {
         match child {
@@ -12,7 +12,7 @@ pub fn file(tree: &Tree, dst: &mut String) -> fmt::Result {
     Ok(())
 }
 
-fn class(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn class(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::Class);
     // dbg!(tree);
     class_decl(tree, dst)?;
@@ -20,16 +20,17 @@ fn class(tree: &Tree, dst: &mut String) -> fmt::Result {
     Ok(())
 }
 
-fn class_decl(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn class_decl(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     writeln!(
         dst,
         "struct {} {{",
         tree.child_value_by_token(TokenKind::Name).expect("name")
     )?;
-    writeln!(dst, "}}")
+    writeln!(dst, "}}")?;
+    Ok(())
 }
 
-fn class_impl(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn class_impl(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     writeln!(
         dst,
         "impl {} {{",
@@ -60,17 +61,18 @@ fn class_impl(tree: &Tree, dst: &mut String) -> fmt::Result {
     //         x => todo!("handle unexpected {:?}", x),
     //     }
     // }
-    writeln!(dst, "}}")
+    writeln!(dst, "}}")?;
+    Ok(())
 }
 
-fn methods(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn methods(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     for method_tree in tree.children_by_tree(TreeKind::Method) {
         method(method_tree, dst)?;
     }
     Ok(())
 }
 
-fn method(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn method(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::Method);
     // dbg!(tree);
     write!(
@@ -97,7 +99,7 @@ fn method(tree: &Tree, dst: &mut String) -> fmt::Result {
     }
     Ok(())
 }
-fn param_list(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn param_list(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::ParamList);
     // dbg!(tree);
     write!(dst, "(",)?;
@@ -137,7 +139,7 @@ fn param_list(tree: &Tree, dst: &mut String) -> fmt::Result {
     write!(dst, ")",)?;
     Ok(())
 }
-fn param(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn param(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::Param);
     // dbg!(tree);
 
@@ -156,7 +158,7 @@ fn param(tree: &Tree, dst: &mut String) -> fmt::Result {
 
     Ok(())
 }
-fn type_expr(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn type_expr(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::TypeExpr);
     // dbg!(tree);
 
@@ -170,7 +172,7 @@ fn type_expr(tree: &Tree, dst: &mut String) -> fmt::Result {
     Ok(())
 }
 
-fn block(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn block(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::Block);
     // dbg!(tree);
 
@@ -186,7 +188,7 @@ fn block(tree: &Tree, dst: &mut String) -> fmt::Result {
     Ok(())
 }
 
-fn stmt_return(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn stmt_return(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     assert!(tree.kind == TreeKind::StmtReturn);
     // dbg!(tree);
     write!(dst, "return ",)?;
@@ -199,7 +201,7 @@ fn stmt_return(tree: &Tree, dst: &mut String) -> fmt::Result {
     Ok(())
 }
 
-fn expr(tree: &Tree, dst: &mut String) -> fmt::Result {
+fn expr(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     // assert!(tree.kind == TreeKind::Block);
     // dbg!(tree);
     match tree.kind {
