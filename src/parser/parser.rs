@@ -1,6 +1,8 @@
 use std::cell::Cell;
 
-use crate::parser::{tree::Child, Lexer, Token, TokenKind, Tree, TreeKind};
+use super::{Child, Lexer, ParseError, Token, TokenKind, Tree, TreeKind};
+
+use super::ParseResult;
 
 pub struct Parser {
     // tokens: Lexer,
@@ -34,7 +36,7 @@ impl Parser {
         }
     }
 
-    pub fn build_tree(self) -> Tree {
+    pub fn build_tree(self) -> ParseResult<Tree> {
         let mut tokens = self.tokens.into_iter();
         let mut events = self.events;
         let mut stack = Vec::new();
@@ -61,7 +63,7 @@ impl Parser {
             // dbg!(&stack);
         }
 
-        stack.pop().unwrap()
+        Ok(stack.pop().unwrap())
     }
 
     pub fn open(&mut self) -> MarkOpened {
@@ -118,6 +120,7 @@ impl Parser {
             .get(self.pos + lookahead)
             .map_or(TokenKind::Eof, |it| it.kind)
     }
+
     pub fn at(&self, kind: TokenKind) -> bool {
         self.nth(0) == kind
     }
@@ -130,12 +133,16 @@ impl Parser {
             false
         }
     }
-    pub fn expect(&mut self, kind: TokenKind) {
+    pub fn expect(&mut self, kind: TokenKind) -> ParseResult<()> {
         if self.eat(kind) {
-            return;
+            return Ok(());
         }
         // TODO error reporting
         eprintln!("expected {kind:?}");
+        Err(ParseError::UnexpectedToken {
+            expected: kind,
+            got: self.nth(0),
+        })
     }
 }
 #[cfg(test)]

@@ -23,17 +23,25 @@ impl<'text> Lexer<'text> {
             "class return true false",
             [ClassKeyword, ReturnKeyword, TrueKeyword, FalseKeyword],
         );
+
+        let comments = ("/** */", [MultiLineCommentStart, MultiLineCommentEnd]);
         let mut text = self.text;
 
         let mut result = Vec::new();
         while !text.is_empty() {
-            if let Some(rest) = trim(text, |it| it.is_ascii_whitespace()) {
-                text = rest;
-                continue;
-            }
             // dbg!(&text);
             let text_orig = text;
             let mut kind = 'kind: {
+                for (i, symbol) in comments.0.split_ascii_whitespace().enumerate() {
+                    if let Some(rest) = text.strip_prefix(symbol) {
+                        text = rest;
+                        break 'kind comments.1[i];
+                    }
+                }
+                if let Some(rest) = trim(text, |it| it.is_ascii_whitespace()) {
+                    text = rest;
+                    break 'kind Space;
+                }
                 for (i, symbol) in punctuation.0.split_ascii_whitespace().enumerate() {
                     if let Some(rest) = text.strip_prefix(symbol) {
                         text = rest;
@@ -90,8 +98,22 @@ pub fn trim(text: &str, predicate: impl std::ops::Fn(char) -> bool) -> Option<&s
 }
 #[cfg(test)]
 mod tests {
+    use crate::parser::TokenKind;
+
     use super::*;
 
     #[test]
-    fn it_works() {}
+    fn doc_comment() {
+        let txt = "/** comment
+        */";
+
+        let lexer = Lexer::new(txt);
+
+        let tokens = lexer.lex();
+
+        assert_eq!(tokens[0].kind, TokenKind::MultiLineCommentStart);
+        assert_eq!(tokens[1].kind, TokenKind::Space);
+        assert_eq!(tokens[3].kind, TokenKind::NewLine);
+        assert_eq!(tokens[4].kind, TokenKind::MultiLineCommentEnd);
+    }
 }

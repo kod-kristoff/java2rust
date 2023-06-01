@@ -34,7 +34,7 @@ pub fn translate_java_to_rust(src: &Path) -> anyhow::Result<()> {
     let mut java_src = String::new();
     java_file.read_to_string(&mut java_src)?;
 
-    let source_tree = parse_tree(&java_src);
+    let source_tree = parse_tree(&java_src)?;
 
     let rust_path = src.with_extension("rs");
     let rust_file = fs::File::create(rust_path)?;

@@ -5,10 +5,12 @@ pub enum TokenKind {
 
     LParen, RParen, LCurly, RCurly,
     Eq, Semi, Comma, Colon, Arrow,
-    Plus, Minus, Star, Slash,
+    Plus, Minus, Star, Slash, 
+    Space, NewLine,
 
     ClassKeyword, ReturnKeyword,
     TrueKeyword, FalseKeyword,
+    MultiLineCommentStart, MultiLineCommentEnd,
 
     Name, JString,
 }

@@ -4,55 +4,59 @@ use crate::parser::TokenKind;
 use crate::parser::TokenKind::*;
 use crate::parser::TreeKind::*;
 
-pub fn file(p: &mut Parser) {
+use super::ParseResult;
+
+pub fn file(p: &mut Parser) -> ParseResult<()> {
     println!("rules.file");
     let m = p.open();
-    dbg!(p.eof());
+    // dbg!(p.eof());
     while !p.eof() {
-        dbg!(p.nth(0));
+        // dbg!(p.nth(0));
         if p.at(ClassKeyword) {
-            class(p);
+            class(p)?;
         } else {
             p.advance_with_error("expected an object");
         }
     }
     p.close(m, File);
+    Ok(())
 }
 
-fn class(p: &mut Parser) {
+fn class(p: &mut Parser) -> ParseResult<()> {
     assert!(p.at(ClassKeyword));
     let m = p.open();
-    p.expect(ClassKeyword);
-    p.expect(Name);
-    p.expect(LCurly);
+    p.expect(ClassKeyword)?;
+    p.expect(Name)?;
+    p.expect(LCurly)?;
     while !p.at(RCurly) && !p.eof() {
-        if method(p) {
+        if method(p)? {
             println!("found method");
         } else {
             p.advance_with_error("expected a method");
         }
     }
-    p.expect(RCurly);
+    p.expect(RCurly)?;
     p.close(m, Class);
+    Ok(())
 }
 
 // Fn = 'name' 'name' ParamList ('->' TypeExpr)? Block
-fn method(p: &mut Parser) -> bool {
+fn method(p: &mut Parser) -> ParseResult<bool> {
     // assert!(p.at(ClassKeyword));
     if p.nth(0) == Name && p.nth(1) == Name && p.nth(2) == LParen {
         let m = p.open();
-        type_expr(p);
-        p.expect(Name);
+        type_expr(p)?;
+        p.expect(Name)?;
 
         if p.at(LParen) {
-            param_list(p);
+            param_list(p)?;
         }
 
         if p.at(LCurly) {
-            block(p);
+            block(p)?;
         }
         p.close(m, Method);
-        return true;
+        return Ok(true);
     }
     // let m = p.open();
     // p.expect(ClassKeyword);
@@ -63,46 +67,49 @@ fn method(p: &mut Parser) -> bool {
     // }
     // p.expect(RCurly);
     // p.close(m, Class);
-    false
+    Ok(false)
 }
 
 // ParamList = '(' Param* ')'
-fn param_list(p: &mut Parser) {
+fn param_list(p: &mut Parser) -> ParseResult<()> {
     assert!(p.at(LParen));
     let m = p.open();
 
-    p.expect(LParen);
+    p.expect(LParen)?;
     while !p.at(RParen) && !p.eof() {
         if p.at(Name) {
-            param(p);
+            param(p)?;
         } else {
             break;
         }
     }
-    p.expect(RParen);
+    p.expect(RParen)?;
 
     p.close(m, ParamList);
+    Ok(())
 }
 
 // Param = TypeExpr 'name' ','?
-fn param(p: &mut Parser) {
+fn param(p: &mut Parser) -> ParseResult<()> {
     assert!(p.at(Name));
     let m = p.open();
-    type_expr(p);
+    type_expr(p)?;
 
-    p.expect(Name);
+    p.expect(Name)?;
     // p.expect(Colon);
     if !p.at(RParen) {
-        p.expect(Comma);
+        p.expect(Comma)?;
     }
     p.close(m, Param);
+    Ok(())
 }
 
 // TypeExpr = 'name'
-fn type_expr(p: &mut Parser) {
+fn type_expr(p: &mut Parser) -> ParseResult<()> {
     let m = p.open();
-    p.expect(Name);
+    p.expect(Name)?;
     p.close(m, TypeExpr);
+    Ok(())
 }
 
 // Block = '{' Stmt* '}'
@@ -111,39 +118,42 @@ fn type_expr(p: &mut Parser) {
 //   StmtLet
 // | StmtReturn
 // | StmtExpr
-fn block(p: &mut Parser) {
+fn block(p: &mut Parser) -> ParseResult<()> {
     assert!(p.at(LCurly));
     let m = p.open();
-    p.expect(LCurly);
+    p.expect(LCurly)?;
     while !p.at(RCurly) && !p.eof() {
         match p.nth(0) {
             //         LetKeyword => stmt_let(p),
-            ReturnKeyword => stmt_return(p),
+            ReturnKeyword => stmt_return(p)?,
             //         _ => stmt_expr(p),
             stmt => todo!("handle stmt={:?}", stmt),
         }
     }
-    p.expect(RCurly);
+    p.expect(RCurly)?;
     p.close(m, Block);
+    Ok(())
 }
 
 // StmtReturn = 'return' Expr ';'
-fn stmt_return(p: &mut Parser) {
+fn stmt_return(p: &mut Parser) -> ParseResult<()> {
     assert!(p.at(ReturnKeyword));
     let m = p.open();
-    p.expect(ReturnKeyword);
-    expr(p);
-    p.expect(Semi);
+    p.expect(ReturnKeyword)?;
+    expr(p)?;
+    p.expect(Semi)?;
     p.close(m, StmtReturn);
+    Ok(())
 }
 
-fn expr(p: &mut Parser) {
-    expr_rec(p, Eof);
+fn expr(p: &mut Parser) -> ParseResult<()> {
+    expr_rec(p, Eof)?;
+    Ok(())
 }
 
-fn expr_rec(p: &mut Parser, left: TokenKind) {
-    let Some(mut lhs) = expr_delimited(p) else {
-        return;
+fn expr_rec(p: &mut Parser, left: TokenKind) -> ParseResult<()> {
+    let Some(mut lhs) = expr_delimited(p)? else {
+        return Ok(());
     };
 
     while p.at(LParen) {
@@ -156,12 +166,13 @@ fn expr_rec(p: &mut Parser, left: TokenKind) {
         if right_binds_tighter(left, right) {
             let m = p.open_before(lhs);
             p.advance();
-            expr_rec(p, right);
+            expr_rec(p, right)?;
             lhs = p.close(m, ExprBinary);
         } else {
             break;
         }
     }
+    Ok(())
 }
 
 fn right_binds_tighter(left: TokenKind, right: TokenKind) -> bool {
@@ -184,7 +195,7 @@ fn right_binds_tighter(left: TokenKind, right: TokenKind) -> bool {
     right_tightness > left_tightness
 }
 
-fn expr_delimited(p: &mut Parser) -> Option<MarkClosed> {
+fn expr_delimited(p: &mut Parser) -> ParseResult<Option<MarkClosed>> {
     let result = match p.nth(0) {
         TrueKeyword | FalseKeyword /*| Int*/ => {
             let m = p.open();
@@ -198,14 +209,14 @@ fn expr_delimited(p: &mut Parser) -> Option<MarkClosed> {
         }
         LParen => {
             let m = p.open();
-            p.expect(LParen);
-            expr(p);
-            p.expect(RParen);
+            p.expect(LParen)?;
+            expr(p)?;
+            p.expect(RParen)?;
             p.close(m, ExprParen)
         }
-        _ => return None,
+        _ => return Ok(None),
     };
-    Some(result)
+    Ok(Some(result))
 }
 #[cfg(test)]
 mod tests {
