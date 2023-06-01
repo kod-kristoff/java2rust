@@ -1,4 +1,4 @@
-use crate::{tree::Child, TokenKind, Tree, TreeKind};
+use crate::parser::{Child, TokenKind, Tree, TreeKind};
 use std::fmt::{self, Write};
 
 pub fn file(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {

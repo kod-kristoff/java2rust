@@ -1,5 +1,5 @@
-use crate::Token;
-use crate::TokenKind::*;
+use crate::parser::Token;
+use crate::parser::TokenKind::*;
 
 pub struct Lexer<'text> {
     text: &'text str,

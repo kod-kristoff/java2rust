@@ -1,8 +1,8 @@
-use crate::parser::MarkClosed;
-use crate::parser::Parser;
-use crate::TokenKind;
-use crate::TokenKind::*;
-use crate::TreeKind::*;
+use crate::parser::parser::MarkClosed;
+use crate::parser::parser::Parser;
+use crate::parser::TokenKind;
+use crate::parser::TokenKind::*;
+use crate::parser::TreeKind::*;
 
 pub fn file(p: &mut Parser) {
     println!("rules.file");

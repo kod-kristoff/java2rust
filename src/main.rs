@@ -1,6 +1,6 @@
 mod options;
 use clap::Parser;
-use java2rust::{generate_rust, parse_tree, translator::translate_java};
+use java2rust::translator::translate_java;
 use options::Args;
 
 fn main() -> anyhow::Result<()> {

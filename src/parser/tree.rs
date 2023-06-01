@@ -24,7 +24,7 @@ pub enum Child {
     Token(Token),
 }
 
-use crate::{format_to, Token, TokenKind};
+use crate::{format_to, parser::Token, parser::TokenKind};
 impl Tree {
     fn print(&self, buf: &mut String, level: usize) -> Result<(), fmt::Error> {
         let indent = " ".repeat(level);

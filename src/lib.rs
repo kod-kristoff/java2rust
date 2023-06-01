@@ -1,28 +1,8 @@
-mod tree;
-pub use tree::{Tree, TreeKind};
-
-mod lexer;
-use lexer::Lexer;
-
-mod parser;
-use parser::Parser;
-
-mod token;
-pub use token::{Token, TokenKind};
-
+pub mod parser;
 pub mod translator;
 
 mod rewrite_rules;
-mod rules;
-
-pub fn parse_tree(text: &str) -> Tree {
-    println!("parse_tree");
-    let tokens = Lexer::new(text);
-    let mut p = Parser::new(tokens);
-    rules::file(&mut p);
-    p.build_tree()
-}
-
+use crate::parser::Tree;
 pub fn generate_rust(tree: &Tree, dst: &mut dyn std::io::Write) -> anyhow::Result<()> {
     rewrite_rules::file(tree, dst)?;
     Ok(())

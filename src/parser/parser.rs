@@ -1,6 +1,6 @@
 use std::cell::Cell;
 
-use crate::{tree::Child, Lexer, Token, TokenKind, Tree, TreeKind};
+use crate::parser::{tree::Child, Lexer, Token, TokenKind, Tree, TreeKind};
 
 pub struct Parser {
     // tokens: Lexer,
@@ -51,11 +51,7 @@ impl Parser {
                 }),
                 Event::Close => {
                     let tree = stack.pop().unwrap();
-                    stack
-                        .last_mut()
-                        .unwrap()
-                        .children
-                        .push(crate::tree::Child::Tree(tree));
+                    stack.last_mut().unwrap().children.push(Child::Tree(tree));
                 }
                 Event::Advance => {
                     let token = tokens.next().unwrap();
